@@ -3,10 +3,18 @@
 //
 // https://github.com/MadLittleMods/postcss-css-variables
 
-// For Debugging
-//var nomo = require('node-monkey').start({port: 50501});
-
-var extend = require("extend");
+// Shallow-merge `sources` into `target`, skipping `undefined` values so an
+// option passed as `undefined` keeps its default.
+function assignDefined(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+    if (source == null) continue;
+    Object.keys(source).forEach(function(key) {
+      if (source[key] !== undefined) target[key] = source[key];
+    });
+  }
+  return target;
+}
 
 var shallowCloneNode = require("./lib/shallow-clone-node");
 var resolveValue = require("./lib/resolve-value");
@@ -64,7 +72,7 @@ var defaults = {
 };
 
 module.exports = (options = {}) => {
-  var opts = extend({}, defaults, options);
+  var opts = assignDefined({}, defaults, options);
 
   // Work with opts here
 
@@ -89,7 +97,7 @@ module.exports = (options = {}) => {
       var map = {};
 
       // Add the js defined variables `opts.variables` to the map
-      map = extend(
+      map = assignDefined(
         map,
         Object.keys(opts.variables).reduce(function(
           prevVariableMap,
