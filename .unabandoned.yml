@@ -1,0 +1,29 @@
+schema: 1
+
+package: "@unabandoned/postcss-css-variables"
+
+upstream:
+  repo: MadLittleMods/postcss-css-variables
+  reason: "no release since 0.19.0 in April 2023"
+
+summary: >-
+  PostCSS plugin that transforms CSS custom properties (CSS variables) into a
+  static representation, resolving var() against statically known selector
+  scope.
+
+why-forked: >-
+  CyberChef's stylesheet build runs it, and it was abandoned while pinning
+  escape-string-regexp to 1.x and balanced-match to 1.x and carrying extend,
+  frozen since 2018. The fork moves the first two to their current majors and
+  replaces extend with a few lines in-tree; postcss stays a peer dependency.
+
+used-by:
+  - consumer: TheTechNetwork/CyberChef
+    purpose: >-
+      runs in postcss.config.js with preserve: true, so every stylesheet keeps
+      its var() declarations and also gets a static fallback value resolved
+      from them
+
+status: active
+
+tags: [postcss, postcss-plugin, css, css-variables, custom-properties]

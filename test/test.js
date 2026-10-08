@@ -1,19 +1,14 @@
-var Promise = require("bluebird");
-var fs = Promise.promisifyAll(require("fs"));
-var path = require("path");
+const { describe, it } = require("node:test");
+const assert = require("node:assert/strict");
+const fs = require("node:fs/promises");
+const path = require("node:path");
 
-var chai = require("chai");
-var expect = chai.expect;
-var chaiAsPromised = require("chai-as-promised");
-chai.use(chaiAsPromised);
+const postcss = require("postcss");
+const cssvariables = require("../");
+const normalizeWhitespace = require("postcss-normalize-whitespace");
+const discardComments = require("postcss-discard-comments");
 
-var postcss = require("postcss");
-var cssvariables = require("../");
-var cssnano = require("cssnano");
-var normalizeWhitespace = require("postcss-normalize-whitespace");
-var discardComments = require("postcss-discard-comments");
-
-var MOCK_JS_VARIABLES = {
+const MOCK_JS_VARIABLES = {
   "--js-defined1": "75px",
   "--js-defined2": {
     value: "80px"
@@ -26,7 +21,7 @@ var MOCK_JS_VARIABLES = {
   "js-defined-no-prefix": "#ff0000"
 };
 
-var NON_STRING_VARIABLES = {
+const NON_STRING_VARIABLES = {
   "number-value": 50,
   "zero-value": 0,
   "null-value": null,
@@ -36,40 +31,26 @@ var NON_STRING_VARIABLES = {
   "false-value": false
 };
 
-var testPlugin = function(filePath, expectedFilePath, options) {
-  options = options || {};
-  return Promise.props({
-    actualBuffer: fs.readFileAsync(filePath),
-    expectedBuffer: fs.readFileAsync(expectedFilePath)
-  })
-    .then(function({ actualBuffer, expectedBuffer }) {
-      var actualResult = postcss([
-        cssvariables(options),
-        cssnano({
-          preset: { plugins: [normalizeWhitespace, discardComments] }
-        })
-      ]).process(String(actualBuffer));
+// Strip comments and insignificant whitespace so fixtures compare on meaning.
+const normalize = [discardComments(), normalizeWhitespace()];
 
-      var expectedResult = postcss([
-        cssnano({
-          preset: { plugins: [normalizeWhitespace, discardComments] }
-        })
-      ]).process(String(expectedBuffer));
+async function testPlugin(filePath, expectedFilePath, options) {
+  const [actualCss, expectedCss] = await Promise.all([
+    fs.readFile(filePath, "utf8"),
+    fs.readFile(expectedFilePath, "utf8")
+  ]);
+  const [actualResult, expectedResult] = await Promise.all([
+    postcss([cssvariables(options || {}), ...normalize]).process(actualCss, { from: undefined }),
+    postcss(normalize).process(expectedCss, { from: undefined })
+  ]);
+  assert.equal(
+    actualResult.css.replace(/\r?\n/g, ""),
+    expectedResult.css.replace(/\r?\n/g, "")
+  );
+}
 
-      return Promise.props({
-        actualResult: actualResult,
-        expectedResult: expectedResult
-      });
-    })
-    .then(({ actualResult, expectedResult }) => {
-      expect(actualResult.css.replace(/\r?\n/g, "")).to.equal(
-        expectedResult.css.replace(/\r?\n/g, "")
-      );
-    });
-};
-
-var fixtureBasePath = "./test/fixtures/";
-var test = function(message, fixtureName, options) {
+const fixtureBasePath = path.join(__dirname, "fixtures");
+const test = function(message, fixtureName, options) {
   it(message, function() {
     return testPlugin(
       path.join(fixtureBasePath, fixtureName + ".css"),
@@ -302,28 +283,24 @@ describe("postcss-css-variables", function() {
       "should use fallback value if provided with missing variables",
       "missing-variable-should-fallback"
     );
-    it("should use string values for `undefined` values, see #22", function() {
-      return fs
-        .readFileAsync("./test/fixtures/missing-variable-usage.css", "utf8")
-        .then(function(buffer) {
-          var contents = String(buffer);
-          return postcss([cssvariables()])
-            .process(contents)
-            .then(function(result) {
-              var root = result.root;
-              var fooRule = root.nodes[0];
-              expect(fooRule.selector).to.equal(".box-foo");
-              var colorDecl = fooRule.nodes[0];
-              expect(colorDecl.value).to.be.a("string");
-              expect(colorDecl.value).to.be.equal("undefined");
+    it("should use string values for `undefined` values, see #22", async function() {
+      const contents = await fs.readFile(
+        path.join(fixtureBasePath, "missing-variable-usage.css"),
+        "utf8"
+      );
+      const result = await postcss([cssvariables()]).process(contents, { from: undefined });
+      const fooRule = result.root.nodes[0];
+      assert.equal(fooRule.selector, ".box-foo");
+      const colorDecl = fooRule.nodes[0];
+      assert.equal(typeof colorDecl.value, "string");
+      assert.equal(colorDecl.value, "undefined");
 
-              expect(result.warnings().length).to.be.equal(1);
-              expect(result.warnings()[0].type).to.be.equal("warning");
-              expect(result.warnings()[0].text).to.be.equal(
-                "variable --missing is undefined and used without a fallback"
-              );
-            });
-        });
+      assert.equal(result.warnings().length, 1);
+      assert.equal(result.warnings()[0].type, "warning");
+      assert.equal(
+        result.warnings()[0].text,
+        "variable --missing is undefined and used without a fallback"
+      );
     });
     test(
       "should use fallback variable if provided with missing variables",
@@ -364,13 +341,13 @@ describe("postcss-css-variables", function() {
     "whitespace-in-var-declaration"
   );
 
-  it("should not parse malformed var() declarations", function() {
-    return expect(
+  it("should not parse malformed var() declarations", async function() {
+    await assert.rejects(
       testPlugin(
-        "./test/fixtures/malformed-variable-usage.css",
-        "./test/fixtures/malformed-variable-usage.expected.css"
+        path.join(fixtureBasePath, "malformed-variable-usage.css"),
+        path.join(fixtureBasePath, "malformed-variable-usage.expected.css")
       )
-    ).to.eventually.be.rejected;
+    );
   });
 
   describe("rule clean up", function() {
@@ -382,5 +359,14 @@ describe("postcss-css-variables", function() {
       "should clean up neseted rules if we removed variable declarations to make it empty",
       "remove-nested-empty-rules-after-variable-collection"
     );
+  });
+});
+
+describe("options", function() {
+  it("keeps defaults for options passed as `undefined`", async function() {
+    const result = await postcss([
+      cssvariables({ variables: undefined, preserve: undefined })
+    ]).process(":root { --a: 1px; } .b { width: var(--a); }", { from: undefined });
+    assert.equal(result.css, ".b { width: 1px; }");
   });
 });

@@ -1,13 +1,27 @@
 # PostCSS CSS Variables
 
-[![npm version](https://badge.fury.io/js/postcss-css-variables.svg)](http://badge.fury.io/js/postcss-css-variables) [![Build Status](https://travis-ci.org/MadLittleMods/postcss-css-variables.svg)](https://travis-ci.org/MadLittleMods/postcss-css-variables) [![Gitter](https://badges.gitter.im/MadLittleMods/postcss-css-variables.svg)](https://gitter.im/MadLittleMods/postcss-css-variables?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+> **This is a maintained fork of [postcss-css-variables][upstream], published as
+> [`@unabandoned/postcss-css-variables`][pkg].** Upstream's last release was
+> 0.19.0 in April 2023. The transform is unchanged; its runtime dependencies are
+> on their current majors and `extend` is replaced by a few lines in-tree.
+> Requires Node.js 22.12 or later. See [.unabandoned.yml](.unabandoned.yml).
+>
+> To keep `require("postcss-css-variables")` working unchanged, install it under
+> its original name with an npm alias:
+>
+> ```
+> npm install --save-dev postcss postcss-css-variables@npm:@unabandoned/postcss-css-variables
+> ```
+
+[upstream]: https://github.com/MadLittleMods/postcss-css-variables
+[pkg]: https://www.npmjs.com/package/@unabandoned/postcss-css-variables
 
 [PostCSS](https://github.com/postcss/postcss) plugin to transform [`CSS Custom Properties (CSS variables)`](http://dev.w3.org/csswg/css-variables/) syntax into a static representation. This plugin provides a future-proof way of using **most** of CSS variables features, including selector cascading with some caveats, because this can only see the CSS, not the potentially dynamic HTML and DOM the CSS is applied to.
 
 ### Install
 
 ```
-npm install postcss postcss-css-variables --save-dev
+npm install postcss @unabandoned/postcss-css-variables --save-dev
 ```
 
 ### Table of Contents
