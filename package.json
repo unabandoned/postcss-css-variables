@@ -38,7 +38,7 @@
     "@commitlint/config-conventional": "21.2.3",
     "postcss": "8.5.29",
     "postcss-discard-comments": "9.0.8",
-    "postcss-normalize-whitespace": "9.0.7"
+    "postcss-normalize-whitespace": "9.0.8"
   },
   "publishConfig": {
     "access": "public",
