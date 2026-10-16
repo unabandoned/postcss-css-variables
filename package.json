@@ -36,7 +36,7 @@
   "devDependencies": {
     "@commitlint/cli": "21.2.3",
     "@commitlint/config-conventional": "21.2.3",
-    "postcss": "8.5.29",
+    "postcss": "8.5.30",
     "postcss-discard-comments": "9.0.8",
     "postcss-normalize-whitespace": "9.0.8"
   },
