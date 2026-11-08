@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.2](https://github.com/unabandoned/postcss-css-variables/compare/postcss-css-variables-v0.19.1...postcss-css-variables-v0.19.2) (2026-11-08)
+
+
+### Bug Fixes
+
+* **deps:** update dependency balanced-match to v5 ([#11](https://github.com/unabandoned/postcss-css-variables/issues/11)) ([16c2a0c](https://github.com/unabandoned/postcss-css-variables/commit/16c2a0c9a00c5c09429f29866da2afd9f945add8))
+
 ## [0.19.1](https://github.com/unabandoned/postcss-css-variables/compare/postcss-css-variables-v0.19.0...postcss-css-variables-v0.19.1) (2026-10-08)
 
 
